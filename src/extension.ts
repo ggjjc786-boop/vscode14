@@ -44,35 +44,7 @@ export async function activate(
     secretStore,
   );
 
-  // Initialize auth system
-  const authManager = new AuthManager(configStore, secretStore, uriHandler);
-  context.subscriptions.push(authManager);
-
-  await migrateProviderTypes(configStore);
-  await migrateApiKeyToAuth(configStore);
-
-  const chatProvider = new UnifyChatService(configStore, secretStore, authManager);
-
-
-  // Initialize official models manager
-  await officialModelsManager.initialize(context, secretStore, authManager);
-  context.subscriptions.push(officialModelsManager);
-
-  // Register the language model chat provider
-  const providerRegistration = vscode.lm.registerLanguageModelChatProvider(
-    VENDOR_ID,
-    chatProvider,
-  );
-  context.subscriptions.push(providerRegistration);
-  context.subscriptions.push(chatProvider);
-
-  // Trigger initial model cache refresh
-  chatProvider.handleConfigurationChange();
-
-  // Register commands
-  registerCommands(context, configStore, secretStore, uriHandler);
-
-  // Register sidebar webview provider
+  // Register sidebar webview provider FIRST (must succeed for UI to show)
   const sidebarProvider = new SidebarProvider(
     context.extensionUri,
     configStore,
@@ -90,13 +62,58 @@ export async function activate(
     }),
   );
 
+  // Register commands (these are safe and should always work)
+  registerCommands(context, configStore, secretStore, uriHandler);
+
+  // Initialize auth system
+  const authManager = new AuthManager(configStore, secretStore, uriHandler);
+  context.subscriptions.push(authManager);
+
+  try {
+    await migrateProviderTypes(configStore);
+    await migrateApiKeyToAuth(configStore);
+  } catch (e) {
+    console.warn('[UCP] Migration failed:', e);
+  }
+
+  const chatProvider = new UnifyChatService(configStore, secretStore, authManager);
+
+  try {
+    // Initialize official models manager
+    await officialModelsManager.initialize(context, secretStore, authManager);
+    context.subscriptions.push(officialModelsManager);
+  } catch (e) {
+    console.warn('[UCP] Official models manager init failed:', e);
+  }
+
+  try {
+    // Register the language model chat provider (proposed API, may not be available)
+    const providerRegistration = vscode.lm.registerLanguageModelChatProvider(
+      VENDOR_ID,
+      chatProvider,
+    );
+    context.subscriptions.push(providerRegistration);
+  } catch (e) {
+    console.warn('[UCP] Language model chat provider registration failed (proposed API may not be available):', e);
+  }
+  context.subscriptions.push(chatProvider);
+
+  // Trigger initial model cache refresh
+  try {
+    chatProvider.handleConfigurationChange();
+  } catch (e) {
+    console.warn('[UCP] Initial config change handling failed:', e);
+  }
+
   registerSecretStorageMaintenance(context, configStore, secretStore);
   runSecretStorageMaintenanceOnStartup(configStore, secretStore);
 
   // Re-register provider when configuration changes to pick up new models
   context.subscriptions.push(
     configStore.onDidChange(() => {
-      chatProvider.handleConfigurationChange();
+      try {
+        chatProvider.handleConfigurationChange();
+      } catch (_e) { /* ignore */ }
       enqueueMaintenance(async () => {
         await cleanupUnusedSecrets(secretStore);
       });
@@ -106,13 +123,11 @@ export async function activate(
   // Re-register provider when official models are updated
   context.subscriptions.push(
     officialModelsManager.onDidUpdate(() => {
-      chatProvider.handleConfigurationChange();
+      try {
+        chatProvider.handleConfigurationChange();
+      } catch (_e) { /* ignore */ }
     }),
   );
-
-  // Note: Auth errors are now handled silently during passive refresh.
-  // Errors are stored and shown only when user actively requests credentials
-  // (e.g., when sending a chat request). See service.ts resolveProvider().
 
   // Clean up config store on deactivation
   context.subscriptions.push(configStore);
