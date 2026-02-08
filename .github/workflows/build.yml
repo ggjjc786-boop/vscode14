@@ -39,7 +39,7 @@ jobs:
         run: npm install -g @vscode/vsce
 
       - name: Package VSIX
-        run: vsce package --out vscode-unify-chat-provider.vsix --no-dependencies
+        run: vsce package --out vscode-unify-chat-provider.vsix --no-dependencies --allow-proposed-api --skip-license
 
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v4
