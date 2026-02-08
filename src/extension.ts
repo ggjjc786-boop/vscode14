@@ -34,102 +34,114 @@ const CONFIG_NAMESPACE = 'unifyChatProvider';
 export async function activate(
   context: vscode.ExtensionContext,
 ): Promise<void> {
-  const configStore = new ConfigStore();
-  const secretStore = new SecretStore(context.secrets);
-
-  // Register URI handler (import-config + OAuth callbacks)
-  const uriHandler = registerUriHandler(
-    context,
-    configStore,
-    secretStore,
-  );
-
-  // Register sidebar webview provider FIRST (must succeed for UI to show)
-  const sidebarProvider = new SidebarProvider(
-    context.extensionUri,
-    configStore,
-    secretStore,
-    uriHandler,
-  );
-  context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(SIDEBAR_VIEW_ID, sidebarProvider),
-  );
-
-  // Register focus sidebar command
-  context.subscriptions.push(
-    vscode.commands.registerCommand('unifyChatProvider.focusSidebar', () => {
-      vscode.commands.executeCommand(`${SIDEBAR_VIEW_ID}.focus`);
-    }),
-  );
-
-  // Register commands (these are safe and should always work)
-  registerCommands(context, configStore, secretStore, uriHandler);
-
-  // Initialize auth system
-  const authManager = new AuthManager(configStore, secretStore, uriHandler);
-  context.subscriptions.push(authManager);
-
+  // Step 1: Create core stores (minimal, should never fail)
+  let configStore: ConfigStore;
+  let secretStore: SecretStore;
   try {
-    await migrateProviderTypes(configStore);
-    await migrateApiKeyToAuth(configStore);
+    configStore = new ConfigStore();
+    secretStore = new SecretStore(context.secrets);
   } catch (e) {
-    console.warn('[UCP] Migration failed:', e);
+    vscode.window.showErrorMessage(`[UCP] Failed to initialize stores: ${e}`);
+    return;
   }
 
-  const chatProvider = new UnifyChatService(configStore, secretStore, authManager);
-
+  // Step 2: Register sidebar IMMEDIATELY (highest priority)
   try {
-    // Initialize official models manager
-    await officialModelsManager.initialize(context, secretStore, authManager);
-    context.subscriptions.push(officialModelsManager);
-  } catch (e) {
-    console.warn('[UCP] Official models manager init failed:', e);
-  }
-
-  try {
-    // Register the language model chat provider (proposed API, may not be available)
-    const providerRegistration = vscode.lm.registerLanguageModelChatProvider(
-      VENDOR_ID,
-      chatProvider,
+    const sidebarProvider = new SidebarProvider(
+      context.extensionUri,
+      configStore,
+      secretStore,
     );
-    context.subscriptions.push(providerRegistration);
+    context.subscriptions.push(
+      vscode.window.registerWebviewViewProvider(SIDEBAR_VIEW_ID, sidebarProvider),
+    );
   } catch (e) {
-    console.warn('[UCP] Language model chat provider registration failed (proposed API may not be available):', e);
+    vscode.window.showErrorMessage(`[UCP] Failed to register sidebar: ${e}`);
   }
-  context.subscriptions.push(chatProvider);
 
-  // Trigger initial model cache refresh
+  // Step 3: Register focus sidebar command
   try {
-    chatProvider.handleConfigurationChange();
+    context.subscriptions.push(
+      vscode.commands.registerCommand('unifyChatProvider.focusSidebar', () => {
+        vscode.commands.executeCommand(`${SIDEBAR_VIEW_ID}.focus`);
+      }),
+    );
+  } catch (_e) { /* ignore */ }
+
+  // Step 4: URI handler (needed for commands)
+  let uriHandler: EventedUriHandler | undefined;
+  try {
+    uriHandler = registerUriHandler(context, configStore, secretStore);
   } catch (e) {
-    console.warn('[UCP] Initial config change handling failed:', e);
+    console.warn('[UCP] URI handler registration failed:', e);
   }
 
-  registerSecretStorageMaintenance(context, configStore, secretStore);
-  runSecretStorageMaintenanceOnStartup(configStore, secretStore);
+  // Step 5: Register commands
+  try {
+    registerCommands(context, configStore, secretStore, uriHandler);
+  } catch (e) {
+    console.warn('[UCP] Command registration failed:', e);
+  }
 
-  // Re-register provider when configuration changes to pick up new models
-  context.subscriptions.push(
-    configStore.onDidChange(() => {
-      try {
-        chatProvider.handleConfigurationChange();
-      } catch (_e) { /* ignore */ }
-      enqueueMaintenance(async () => {
-        await cleanupUnusedSecrets(secretStore);
-      });
-    }),
-  );
+  // Step 6: Auth, migration, and LLM provider (may fail with proposed APIs)
+  try {
+    const authManager = new AuthManager(configStore, secretStore, uriHandler);
+    context.subscriptions.push(authManager);
 
-  // Re-register provider when official models are updated
-  context.subscriptions.push(
-    officialModelsManager.onDidUpdate(() => {
-      try {
-        chatProvider.handleConfigurationChange();
-      } catch (_e) { /* ignore */ }
-    }),
-  );
+    try {
+      await migrateProviderTypes(configStore);
+      await migrateApiKeyToAuth(configStore);
+    } catch (e) {
+      console.warn('[UCP] Migration failed:', e);
+    }
 
-  // Clean up config store on deactivation
+    const chatProvider = new UnifyChatService(configStore, secretStore, authManager);
+    context.subscriptions.push(chatProvider);
+
+    try {
+      await officialModelsManager.initialize(context, secretStore, authManager);
+      context.subscriptions.push(officialModelsManager);
+    } catch (e) {
+      console.warn('[UCP] Official models manager init failed:', e);
+    }
+
+    try {
+      if (typeof vscode.lm?.registerLanguageModelChatProvider === 'function') {
+        const providerRegistration = vscode.lm.registerLanguageModelChatProvider(
+          VENDOR_ID,
+          chatProvider,
+        );
+        context.subscriptions.push(providerRegistration);
+      }
+    } catch (e) {
+      console.warn('[UCP] Language model chat provider registration skipped:', e);
+    }
+
+    try {
+      chatProvider.handleConfigurationChange();
+    } catch (_e) { /* ignore */ }
+
+    registerSecretStorageMaintenance(context, configStore, secretStore);
+    runSecretStorageMaintenanceOnStartup(configStore, secretStore);
+
+    context.subscriptions.push(
+      configStore.onDidChange(() => {
+        try { chatProvider.handleConfigurationChange(); } catch (_e) { /* ignore */ }
+        enqueueMaintenance(async () => {
+          await cleanupUnusedSecrets(secretStore);
+        });
+      }),
+    );
+
+    context.subscriptions.push(
+      officialModelsManager.onDidUpdate(() => {
+        try { chatProvider.handleConfigurationChange(); } catch (_e) { /* ignore */ }
+      }),
+    );
+  } catch (e) {
+    console.warn('[UCP] Advanced features init failed (sidebar still works):', e);
+  }
+
   context.subscriptions.push(configStore);
 }
 
@@ -137,7 +149,7 @@ export function registerCommands(
   context: vscode.ExtensionContext,
   configStore: ConfigStore,
   secretStore: SecretStore,
-  uriHandler: EventedUriHandler,
+  uriHandler?: EventedUriHandler,
 ): void {
   context.subscriptions.push(
     vscode.commands.registerCommand('unifyChatProvider.addProvider', () =>
