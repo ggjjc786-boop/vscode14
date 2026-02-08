@@ -1,0 +1,586 @@
+import type { AuthMethod } from '../auth';
+import type { ProviderConfig, ModelConfig } from '../types';
+import type { WellKnownAuthPresetId } from './auths';
+import {
+  WellKnownModelId,
+  WELL_KNOWN_MODELS,
+  getAlternativeIds,
+  normalizeWellKnownConfigs,
+} from './models';
+
+export type WellKnownProviderConfig = Omit<
+  ProviderConfig,
+  'auth' | 'models'
+> & {
+  /**
+   * Category label used for grouping in UI (QuickPick separators).
+   * Stored as an i18n key (passed through `t()` by the UI).
+   */
+  category: string;
+  authTypes?: WellKnownAuthTypeId[];
+  models: WellKnownModelId[];
+};
+
+export type WellKnownAuthTypeId = AuthMethod | WellKnownAuthPresetId;
+
+export const WELL_KNOWN_PROVIDERS: WellKnownProviderConfig[] = [
+  {
+    name: 'Open AI',
+    category: 'General',
+    type: 'openai-responses',
+    baseUrl: 'https://api.openai.com',
+    authTypes: ['api-key'],
+    models: [
+      'gpt-5.2',
+      'gpt-5.1',
+      'gpt-5',
+      'gpt-5-mini',
+      'gpt-5.2-pro',
+      'gpt-5-nano',
+      'gpt-4.1',
+      'gpt-oss-120b',
+      'gpt-oss-20b',
+    ],
+  },
+  {
+    name: 'Google AI Studio',
+    category: 'General',
+    type: 'google-ai-studio',
+    baseUrl: 'https://generativelanguage.googleapis.com',
+    authTypes: ['api-key'],
+    models: [
+      'gemini-3-pro-preview',
+      'gemini-3-flash-preview',
+      'gemini-2.5-pro',
+      'gemini-2.5-flash',
+      'gemini-2.5-flash-lite',
+      'gemini-2.0-flash',
+      'gemini-2.0-flash-lite',
+    ],
+  },
+  {
+    name: 'Google Vertex AI',
+    category: 'General',
+    type: 'google-vertex-ai',
+    baseUrl: 'https://aiplatform.googleapis.com',
+    authTypes: ['google-vertex-ai-auth'],
+    models: [
+      'gemini-3-pro-preview',
+      'gemini-3-flash-preview',
+      'gemini-2.5-pro',
+      'gemini-2.5-flash',
+      'gemini-2.5-flash-lite',
+      'gemini-2.0-flash',
+      'gemini-2.0-flash-lite',
+    ],
+  },
+  {
+    name: 'Anthropic',
+    category: 'General',
+    type: 'anthropic',
+    baseUrl: 'https://api.anthropic.com',
+    authTypes: ['api-key'],
+    models: [
+      'claude-opus-4-6',
+      'claude-opus-4-5',
+      'claude-sonnet-4-5',
+      'claude-haiku-4-5',
+    ],
+  },
+  {
+    name: 'xAI',
+    category: 'General',
+    type: 'openai-responses',
+    baseUrl: 'https://api.x.ai',
+    authTypes: ['api-key'],
+    models: [
+      'grok-4',
+      'grok-4-1-fast-reasoning',
+      'grok-4-1-fast-non-reasoning',
+      'grok-code-fast-1',
+    ],
+  },
+  {
+    name: 'Hugging Face (Inference Providers)',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://router.huggingface.co/v1',
+    authTypes: ['api-key'],
+    models: [],
+  },
+  {
+    name: 'OpenRouter',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://openrouter.ai/api/v1',
+    authTypes: ['api-key'],
+    models: [],
+  },
+  {
+    name: 'Cerebras',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://api.cerebras.ai',
+    authTypes: ['api-key'],
+    extraBody: {
+      reasoning_format: 'parsed',
+    },
+    models: [
+      'llama3.1-8b',
+      'llama-3.3-70b',
+      'gpt-oss-120b',
+      'qwen-3-32b',
+      'qwen-3-235b-a22b-instruct-2507',
+      'zai-glm-4.7',
+    ],
+  },
+  {
+    name: 'OpenCode Zen (OpenAI Chat Completion)',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://opencode.ai/zen',
+    authTypes: ['api-key'],
+    models: ['big-pickle', 'glm-4.7-free', 'kimi-k2.5-free'],
+  },
+  {
+    name: 'OpenCode Zen (OpenAI Responses)',
+    category: 'General',
+    type: 'openai-responses',
+    baseUrl: 'https://opencode.ai/zen',
+    authTypes: ['api-key'],
+    models: ['gpt-5-nano'],
+  },
+  {
+    name: 'OpenCode Zen (Anthropic Messages)',
+    category: 'General',
+    type: 'anthropic',
+    baseUrl: 'https://opencode.ai/zen',
+    authTypes: ['api-key'],
+    models: ['minimax-m2.1-free'],
+  },
+  {
+    name: 'OpenCode Zen (Gemini)',
+    category: 'General',
+    type: 'google-ai-studio',
+    baseUrl: 'https://opencode.ai/zen',
+    authTypes: ['api-key'],
+    models: ['gemini-3-pro', 'gemini-3-flash'],
+  },
+  {
+    name: 'Nvidia',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://integrate.api.nvidia.com',
+    authTypes: ['api-key'],
+    models: [],
+  },
+  {
+    name: 'Alibaba Cloud Model Studio (China)',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    authTypes: ['api-key'],
+    models: [
+      'qwen3-max-2026-01-23',
+      'qwen-plus',
+      'qwen3-coder-plus',
+      'qwen3-coder-flash',
+    ],
+  },
+  {
+    name: 'Alibaba Cloud Model Studio (Coding Plan)',
+    category: 'General',
+    type: 'anthropic',
+    baseUrl: 'https://coding.dashscope.aliyuncs.com/apps/anthropic',
+    authTypes: ['api-key'],
+    models: ['qwen3-coder-plus'],
+  },
+  {
+    name: 'Alibaba Cloud Model Studio (International)',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+    authTypes: ['api-key'],
+    models: [
+      'qwen3-max-2026-01-23',
+      'qwen-plus',
+      'qwen3-coder-plus',
+      'qwen3-coder-flash',
+    ],
+  },
+  {
+    name: 'Model Scope (API-Inference)',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://api-inference.modelscope.cn/v1',
+    authTypes: ['api-key'],
+    models: [],
+  },
+  {
+    name: 'Volcano Engine',
+    category: 'General',
+    type: 'openai-responses',
+    baseUrl: 'https://ark.cn-beijing.volces.com/api/v3',
+    authTypes: ['api-key'],
+    models: [
+      'doubao-seed-1-8-251228',
+      'doubao-seed-code-preview-251028',
+      'doubao-seed-1-6-lite-251015',
+      'doubao-seed-1-6-flash-250828',
+      'doubao-seed-1-6-vision-250815',
+    ],
+  },
+  {
+    name: 'Volcano Engine (Coding Plan)',
+    category: 'General',
+    type: 'openai-responses',
+    baseUrl: 'https://ark.cn-beijing.volces.com/api/coding/v3',
+    authTypes: ['api-key'],
+    models: ['doubao-seed-code-preview-latest', 'ark-code-latest'],
+  },
+  {
+    name: 'Byte Plus',
+    category: 'General',
+    type: 'openai-responses',
+    baseUrl: 'https://ark.ap-southeast.bytepluses.com/api/v3',
+    authTypes: ['api-key'],
+    models: [
+      'doubao-seed-1-8-251228',
+      'doubao-seed-code-preview-251028',
+      'doubao-seed-1-6-lite-251015',
+      'doubao-seed-1-6-flash-250828',
+      'doubao-seed-1-6-vision-250815',
+    ],
+  },
+  {
+    name: 'Tencent Cloud (China)',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://api.hunyuan.cloud.tencent.com/v1',
+    authTypes: ['api-key'],
+    models: [
+      'hunyuan-2.0-thinking-20251109',
+      'hunyuan-2.0-instruct-20251111',
+      'hunyuan-vision-1.5-instruct',
+    ],
+  },
+  {
+    name: 'DeepSeek',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://api.deepseek.com',
+    authTypes: ['api-key'],
+    models: ['deepseek-chat', 'deepseek-reasoner'],
+  },
+  {
+    name: 'Gitee AI',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://ai.gitee.com/v1',
+    authTypes: ['api-key'],
+    models: [],
+  },
+  {
+    name: 'Xiaomi MIMO',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://api.xiaomimimo.com/v1',
+    authTypes: ['api-key'],
+    models: ['mimo-v2-flash'],
+  },
+  {
+    name: 'StepFun (China)',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://api.stepfun.com/v1',
+    authTypes: ['api-key'],
+    models: ['step-3.5-flash', 'step-2-mini', 'step-1o-turbo-vision'],
+  },
+  {
+    name: 'StepFun (International)',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://api.stepfun.ai/v1',
+    authTypes: ['api-key'],
+    models: ['step-3.5-flash', 'step-2-mini', 'step-1o-turbo-vision'],
+  },
+  {
+    name: 'Ollama Local',
+    category: 'General',
+    type: 'ollama',
+    baseUrl: 'http://localhost:11434/api',
+    authTypes: ['none'],
+    models: [],
+    autoFetchOfficialModels: true,
+  },
+  {
+    name: 'Ollama Cloud',
+    category: 'General',
+    type: 'ollama',
+    baseUrl: 'https://ollama.com/api',
+    authTypes: ['api-key'],
+    models: [],
+  },
+  {
+    name: 'ZhiPu AI',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://open.bigmodel.cn/api/paas/v4',
+    authTypes: ['api-key'],
+    models: [
+      'glm-4.7',
+      'glm-4.6v',
+      'glm-4.7-flashx',
+      'glm-4.7-flash',
+      'codegeex-4',
+    ],
+  },
+  {
+    name: 'ZhiPu AI (Coding Plan)',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://open.bigmodel.cn/api/coding/paas/v4',
+    authTypes: ['api-key'],
+    models: ['glm-4.7', 'glm-4.6', 'glm-4.7-flashx', 'glm-4.7-flash'],
+  },
+  {
+    name: 'Z.AI',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://api.z.ai/api/paas/v4',
+    authTypes: ['api-key'],
+    models: [
+      'glm-4.7',
+      'glm-4.6v',
+      'glm-4.7-flashx',
+      'glm-4.7-flash',
+      'codegeex-4',
+    ],
+  },
+  {
+    name: 'Z.AI (Coding Plan)',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://api.z.ai/api/coding/paas/v4',
+    authTypes: ['api-key'],
+    models: ['glm-4.7', 'glm-4.6', 'glm-4.7-flashx', 'glm-4.7-flash'],
+  },
+  {
+    name: 'MiniMax (China)',
+    category: 'General',
+    type: 'anthropic',
+    baseUrl: 'https://api.minimaxi.com/anthropic',
+    authTypes: ['api-key'],
+    models: ['MiniMax-M2.1', 'MiniMax-M2.1-lightning'],
+  },
+  {
+    name: 'MiniMax (International)',
+    category: 'General',
+    type: 'anthropic',
+    baseUrl: 'https://api.minimax.io/anthropic',
+    authTypes: ['api-key'],
+    models: ['MiniMax-M2.1', 'MiniMax-M2.1-lightning'],
+  },
+  {
+    name: 'LongCat',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://api.longcat.chat/openai',
+    authTypes: ['api-key'],
+    models: [
+      'LongCat-Flash-Chat',
+      'LongCat-Flash-Thinking',
+      'LongCat-Flash-Thinking-2601',
+      'LongCat-Flash-Lite',
+    ],
+  },
+  {
+    name: 'Moonshot AI (China)',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://api.moonshot.cn',
+    authTypes: ['api-key'],
+    models: [
+      'kimi-k2.5',
+      'kimi-k2-thinking',
+      'kimi-k2-thinking-turbo',
+      'kimi-k2-0905-preview',
+      'kimi-k2-turbo-preview',
+    ],
+  },
+  {
+    name: 'Moonshot AI (International)',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://api.moonshot.ai',
+    authTypes: ['api-key'],
+    models: [
+      'kimi-k2.5',
+      'kimi-k2-thinking',
+      'kimi-k2-thinking-turbo',
+      'kimi-k2-0905-preview',
+      'kimi-k2-turbo-preview',
+    ],
+  },
+  {
+    name: 'Moonshot AI (Coding Plan)',
+    category: 'General',
+    type: 'anthropic',
+    baseUrl: 'https://api.kimi.com/coding',
+    authTypes: ['api-key'],
+    models: ['kimi-for-coding'],
+  },
+  {
+    name: 'SiliconFlow (China)',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://api.siliconflow.cn/v1',
+    authTypes: ['api-key'],
+    models: [],
+  },
+  {
+    name: 'SiliconFlow (International)',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://api.siliconflow.com/v1',
+    authTypes: ['api-key'],
+    models: [],
+  },
+  {
+    name: 'StreamLake Vanchin (China)',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://wanqing.streamlakeapi.com/api/gateway/v1/endpoints',
+    authTypes: ['api-key'],
+    models: ['kat-coder-pro-v1', 'kat-coder-exp-72b-1010', 'kat-coder-air-v1'],
+  },
+  {
+    name: 'StreamLake Vanchin (China, Coding Plan)',
+    category: 'General',
+    type: 'anthropic',
+    baseUrl:
+      'https://wanqing.streamlakeapi.com/api/gateway/coding/kat-coder-pro-v1/claude-code-proxy',
+    authTypes: ['api-key'],
+    models: ['kat-coder-pro-v1'],
+  },
+  {
+    name: 'StreamLake Vanchin (International)',
+    category: 'General',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://vanchin.streamlake.ai/api/gateway/v1/endpoints',
+    authTypes: ['api-key'],
+    models: ['kat-coder-pro-v1', 'kat-coder-exp-72b-1010', 'kat-coder-air-v1'],
+  },
+  {
+    name: 'StreamLake Vanchin (International, Coding Plan)',
+    category: 'General',
+    type: 'anthropic',
+    baseUrl:
+      'https://vanchin.streamlake.ai/api/gateway/coding/kat-coder-pro-v1/claude-code-proxy',
+    authTypes: ['api-key'],
+    models: ['kat-coder-pro-v1'],
+  },
+  {
+    name: 'OpenAI CodeX (ChatGPT Plus/Pro)',
+    category: 'Experimental',
+    type: 'openai-codex',
+    baseUrl: 'https://chatgpt.com/backend-api/codex/responses',
+    authTypes: ['openai-codex'],
+    models: [],
+    autoFetchOfficialModels: true,
+  },
+  {
+    name: 'Qwen Code',
+    category: 'Experimental',
+    type: 'qwen-code',
+    baseUrl: 'https://portal.qwen.ai',
+    authTypes: ['qwen-code'],
+    models: [],
+    autoFetchOfficialModels: true,
+  },
+  {
+    name: 'GitHub Copilot',
+    category: 'Experimental',
+    type: 'github-copilot',
+    baseUrl: 'https://api.githubcopilot.com',
+    authTypes: ['github-copilot'],
+    models: [],
+    autoFetchOfficialModels: true,
+  },
+  {
+    name: 'Google Antigravity',
+    category: 'Experimental',
+    type: 'google-antigravity',
+    baseUrl: 'https://daily-cloudcode-pa.sandbox.googleapis.com',
+    authTypes: ['antigravity-oauth'],
+    models: [],
+    autoFetchOfficialModels: true,
+  },
+  {
+    name: 'Google Gemini CLI',
+    category: 'Experimental',
+    type: 'google-gemini-cli',
+    baseUrl: 'https://cloudcode-pa.googleapis.com',
+    authTypes: ['google-gemini-oauth'],
+    models: [],
+    autoFetchOfficialModels: true,
+  },
+  {
+    name: 'Claude Code',
+    category: 'Experimental',
+    type: 'claude-code',
+    baseUrl: 'https://api.anthropic.com',
+    authTypes: ['api-key', 'claude-code'],
+    models: [
+      'claude-opus-4-6',
+      'claude-opus-4-5',
+      'claude-sonnet-4-5',
+      'claude-haiku-4-5',
+    ],
+  },
+  {
+    name: 'iFlow',
+    category: 'Experimental',
+    type: 'openai-chat-completion',
+    baseUrl: 'https://apis.iflow.cn/v1',
+    authTypes: ['iflow-cli', 'api-key'],
+    extraHeaders: {
+      'User-Agent': 'iFlow-Cli',
+    },
+    models: ['glm-4.7', 'MiniMax-M2.1', 'kimi-k2.5'],
+    autoFetchOfficialModels: true,
+  },
+];
+
+export function resolveProviderModels(
+  provider: WellKnownProviderConfig,
+): ModelConfig[] {
+  const idSet = new Set<string>(provider.models);
+  const declaredIds = new Map<string, string>();
+
+  const matched = WELL_KNOWN_MODELS.filter((m) => {
+    if (idSet.has(m.id)) {
+      return true;
+    }
+    const alternativeIds = getAlternativeIds(m);
+    const matchedAltId = alternativeIds.find((altId) => idSet.has(altId));
+    if (matchedAltId) {
+      declaredIds.set(m.id, matchedAltId);
+      return true;
+    }
+    return false;
+  });
+
+  const providerForMatching: ProviderConfig = {
+    type: provider.type,
+    name: provider.name,
+    baseUrl: provider.baseUrl,
+    models: [],
+    extraHeaders: provider.extraHeaders,
+    extraBody: provider.extraBody,
+    timeout: provider.timeout,
+    autoFetchOfficialModels: provider.autoFetchOfficialModels,
+  };
+
+  return normalizeWellKnownConfigs(matched, declaredIds, providerForMatching);
+}

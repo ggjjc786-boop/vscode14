@@ -1,0 +1,591 @@
+{
+  "name": "vscode-unify-chat-provider",
+  "displayName": "%displayName%",
+  "description": "%description%",
+  "version": "4.5.1",
+  "categories": [
+    "AI",
+    "Chat"
+  ],
+  "keywords": [
+    "ai",
+    "chat",
+    "agent",
+    "copilot",
+    "github-copilot",
+    "language-model",
+    "llm",
+    "ucp",
+    "oai",
+    "openai",
+    "anthropic",
+    "gemini",
+    "ollama",
+    "deepseek",
+    "qwen",
+    "minimax",
+    "moonshot",
+    "kimi",
+    "glm",
+    "zhipu",
+    "zai",
+    "hugging-face",
+    "openrouter",
+    "model-studio",
+    "modelscope",
+    "volcano-engine",
+    "byteplus",
+    "hunyuan",
+    "hy",
+    "xiaomimimo",
+    "iflow",
+    "claude-code",
+    "codex",
+    "gemini-cli",
+    "antigravity",
+    "qwen-code",
+    "kiro",
+    "free-ai",
+    "free-chat",
+    "free-agent",
+    "free-models",
+    "coding-plan",
+    "custom-models",
+    "custom-chat",
+    "自定义模型",
+    "自定义聊天",
+    "免费模型",
+    "免费聊天"
+  ],
+  "publisher": "SmallMain",
+  "icon": "icon.png",
+  "repository": "github:ggjjc786-boop/vscode14",
+  "bugs": "https://github.com/ggjjc786-boop/vscode14/issues",
+  "author": "SmallMain",
+  "sponsor": {
+    "url": "https://github.com/smallmain/sponsors"
+  },
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.104.0"
+  },
+  "packageManager": "npm@10.8.2",
+  "extensionDependencies": [
+    "GitHub.copilot-chat"
+  ],
+  "enabledApiProposals": [
+    "extensionsAny",
+    "newSymbolNamesProvider",
+    "interactive",
+    "codeActionAI",
+    "activeComment",
+    "commentReveal",
+    "contribCommentThreadAdditionalMenu",
+    "contribCommentsViewThreadMenus",
+    "documentFiltersExclusive",
+    "embeddings",
+    "findTextInFiles",
+    "findTextInFiles2",
+    "findFiles2",
+    "textSearchProvider",
+    "terminalDataWriteEvent",
+    "terminalExecuteCommandEvent",
+    "terminalSelection",
+    "terminalQuickFixProvider",
+    "mappedEditsProvider",
+    "aiRelatedInformation",
+    "aiSettingsSearch",
+    "chatParticipantAdditions",
+    "chatEditing",
+    "defaultChatParticipant",
+    "contribSourceControlInputBoxMenu",
+    "authLearnMore",
+    "testObserver",
+    "aiTextSearchProvider",
+    "chatParticipantPrivate",
+    "chatProvider",
+    "contribDebugCreateConfiguration",
+    "chatReferenceDiagnostic",
+    "textSearchProvider2",
+    "chatReferenceBinaryData",
+    "languageModelSystem",
+    "languageModelCapabilities",
+    "inlineCompletionsAdditions",
+    "chatStatusItem",
+    "taskProblemMatcherStatus",
+    "contribLanguageModelToolSets",
+    "textDocumentChangeReason",
+    "resolvers",
+    "taskExecutionTerminal",
+    "dataChannels",
+    "languageModelThinkingPart",
+    "chatSessionsProvider",
+    "devDeviceId",
+    "contribEditorContentMenu"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "l10n": "./l10n",
+  "contributes": {
+    "languageModelChatProviders": [
+      {
+        "vendor": "unify-chat-provider",
+        "displayName": "%languageModelChatProviders.displayName%",
+        "managementCommand": "unifyChatProvider.manageProviders"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "unifyChatProvider",
+          "title": "%viewsContainers.activitybar.title%",
+          "icon": "$(hubot)"
+        }
+      ]
+    },
+    "views": {
+      "unifyChatProvider": [
+        {
+          "type": "webview",
+          "id": "unifyChatProvider.sidebarView",
+          "name": "%views.sidebar.name%"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "unifyChatProvider.addProvider",
+        "title": "%command.addProvider.title%"
+      },
+      {
+        "command": "unifyChatProvider.removeProvider",
+        "title": "%command.removeProvider.title%"
+      },
+      {
+        "command": "unifyChatProvider.importConfig",
+        "title": "%command.importConfig.title%"
+      },
+      {
+        "command": "unifyChatProvider.addProviderFromWellKnownProviderList",
+        "title": "%command.addProviderFromWellKnownProviderList.title%"
+      },
+      {
+        "command": "unifyChatProvider.importConfigFromOtherApplications",
+        "title": "%command.importConfigFromOtherApplications.title%"
+      },
+      {
+        "command": "unifyChatProvider.exportConfig",
+        "title": "%command.exportConfig.title%"
+      },
+      {
+        "command": "unifyChatProvider.manageProviders",
+        "title": "%command.manageProviders.title%"
+      },
+      {
+        "command": "unifyChatProvider.refreshAllProvidersOfficialModels",
+        "title": "%command.refreshAllProvidersOfficialModels.title%"
+      },
+      {
+        "command": "unifyChatProvider.focusSidebar",
+        "title": "%command.focusSidebar.title%"
+      }
+    ],
+    "configuration": {
+      "title": "%configuration.title%",
+      "properties": {
+        "unifyChatProvider.verbose": {
+          "type": "boolean",
+          "description": "%configuration.verbose.description%",
+          "default": false
+        },
+        "unifyChatProvider.storeApiKeyInSettings": {
+          "type": "boolean",
+          "description": "%configuration.storeApiKeyInSettings.description%",
+          "default": false
+        },
+        "unifyChatProvider.endpoints": {
+          "type": "array",
+          "description": "%configuration.endpoints.description%",
+          "items": {
+            "type": "object",
+            "required": [
+              "type",
+              "name",
+              "baseUrl",
+              "models"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "%configuration.endpoints.type.description%",
+                "enum": [
+                  "anthropic",
+                  "google-ai-studio",
+                  "google-vertex-ai",
+                  "google-antigravity",
+                  "google-gemini-cli",
+                  "github-copilot",
+                  "openai-chat-completion",
+                  "qwen-code",
+                  "openai-responses",
+                  "openai-codex",
+                  "ollama",
+                  "claude-code"
+                ],
+                "enumDescriptions": [
+                  "%configuration.endpoints.type.enumDescriptions.0%",
+                  "%configuration.endpoints.type.enumDescriptions.1%",
+                  "%configuration.endpoints.type.enumDescriptions.2%",
+                  "%configuration.endpoints.type.enumDescriptions.6%",
+                  "%configuration.endpoints.type.enumDescriptions.8%",
+                  "%configuration.endpoints.type.enumDescriptions.10%",
+                  "%configuration.endpoints.type.enumDescriptions.3%",
+                  "%configuration.endpoints.type.enumDescriptions.11%",
+                  "%configuration.endpoints.type.enumDescriptions.4%",
+                  "%configuration.endpoints.type.enumDescriptions.7%",
+                  "%configuration.endpoints.type.enumDescriptions.5%",
+                  "%configuration.endpoints.type.enumDescriptions.9%"
+                ]
+              },
+              "name": {
+                "type": "string",
+                "description": "%configuration.endpoints.name.description%"
+              },
+              "baseUrl": {
+                "type": "string",
+                "description": "%configuration.endpoints.baseUrl.description%"
+              },
+              "extraHeaders": {
+                "type": "object",
+                "description": "%configuration.endpoints.extraHeaders.description%",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "extraBody": {
+                "type": "object",
+                "description": "%configuration.endpoints.extraBody.description%",
+                "additionalProperties": true
+              },
+              "timeout": {
+                "type": "object",
+                "description": "%configuration.endpoints.timeout.description%",
+                "properties": {
+                  "connection": {
+                    "type": "integer",
+                    "description": "%configuration.endpoints.timeout.connection.description%",
+                    "default": 10000
+                  },
+                  "response": {
+                    "type": "integer",
+                    "description": "%configuration.endpoints.timeout.response.description%",
+                    "default": 120000
+                  }
+                }
+              },
+              "autoFetchOfficialModels": {
+                "type": "boolean",
+                "description": "%configuration.endpoints.autoFetchOfficialModels.description%",
+                "default": false
+              },
+              "models": {
+                "type": "array",
+                "description": "%configuration.endpoints.models.description%",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "description": "%configuration.endpoints.models.string.description%"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "id"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "%configuration.endpoints.models.id.description%"
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "%configuration.endpoints.models.name.description%"
+                        },
+                        "family": {
+                          "type": "string",
+                          "description": "%configuration.endpoints.models.family.description%"
+                        },
+                        "maxInputTokens": {
+                          "type": "number",
+                          "description": "%configuration.endpoints.models.maxInputTokens.description%",
+                          "default": 128000
+                        },
+                        "maxOutputTokens": {
+                          "type": "number",
+                          "description": "%configuration.endpoints.models.maxOutputTokens.description%",
+                          "default": 8192
+                        },
+                        "capabilities": {
+                          "type": "object",
+                          "description": "%configuration.endpoints.models.capabilities.description%",
+                          "properties": {
+                            "toolCalling": {
+                              "anyOf": [
+                                {
+                                  "type": "boolean",
+                                  "description": "%configuration.endpoints.models.capabilities.toolCalling.boolean.description%"
+                                },
+                                {
+                                  "type": "integer",
+                                  "description": "%configuration.endpoints.models.capabilities.toolCalling.integer.description%"
+                                }
+                              ]
+                            },
+                            "imageInput": {
+                              "type": "boolean",
+                              "description": "%configuration.endpoints.models.capabilities.imageInput.description%"
+                            }
+                          }
+                        },
+                        "parallelToolCalling": {
+                          "type": "boolean",
+                          "description": "%configuration.endpoints.models.parallelToolCalling.description%"
+                        },
+                        "stream": {
+                          "type": "boolean",
+                          "description": "%configuration.endpoints.models.stream.description%"
+                        },
+                        "temperature": {
+                          "type": "number",
+                          "description": "%configuration.endpoints.models.temperature.description%"
+                        },
+                        "topK": {
+                          "type": "integer",
+                          "description": "%configuration.endpoints.models.topK.description%"
+                        },
+                        "topP": {
+                          "type": "number",
+                          "description": "%configuration.endpoints.models.topP.description%"
+                        },
+                        "presencePenalty": {
+                          "type": "number",
+                          "description": "%configuration.endpoints.models.presencePenalty.description%"
+                        },
+                        "frequencyPenalty": {
+                          "type": "number",
+                          "description": "%configuration.endpoints.models.frequencyPenalty.description%"
+                        },
+                        "verbosity": {
+                          "type": "string",
+                          "description": "%configuration.endpoints.models.verbosity.description%",
+                          "enum": [
+                            "low",
+                            "medium",
+                            "high"
+                          ],
+                          "enumDescriptions": [
+                            "%configuration.endpoints.models.verbosity.enumDescriptions.0%",
+                            "%configuration.endpoints.models.verbosity.enumDescriptions.1%",
+                            "%configuration.endpoints.models.verbosity.enumDescriptions.2%"
+                          ]
+                        },
+                        "thinking": {
+                          "type": "object",
+                          "description": "%configuration.endpoints.models.thinking.description%",
+                          "oneOf": [
+                            {
+                              "properties": {
+                                "type": {
+                                  "const": "enabled",
+                                  "description": "%configuration.endpoints.models.thinking.enabled.type.description%"
+                                },
+                                "budgetTokens": {
+                                  "type": "integer",
+                                  "description": "%configuration.endpoints.models.thinking.enabled.budgetTokens.description%"
+                                },
+                                "effort": {
+                                  "type": "string",
+                                  "description": "%configuration.endpoints.models.thinking.enabled.effort.description%",
+                                  "enum": [
+                                    "none",
+                                    "minimal",
+                                    "low",
+                                    "medium",
+                                    "high",
+                                    "xhigh"
+                                  ],
+                                  "enumDescriptions": [
+                                    "%configuration.endpoints.models.thinking.enabled.effort.enumDescriptions.0%",
+                                    "%configuration.endpoints.models.thinking.enabled.effort.enumDescriptions.1%",
+                                    "%configuration.endpoints.models.thinking.enabled.effort.enumDescriptions.2%",
+                                    "%configuration.endpoints.models.thinking.enabled.effort.enumDescriptions.3%",
+                                    "%configuration.endpoints.models.thinking.enabled.effort.enumDescriptions.4%",
+                                    "%configuration.endpoints.models.thinking.enabled.effort.enumDescriptions.5%"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            {
+                              "properties": {
+                                "type": {
+                                  "const": "auto",
+                                  "description": "%configuration.endpoints.models.thinking.auto.type.description%"
+                                },
+                                "budgetTokens": {
+                                  "type": "integer",
+                                  "description": "%configuration.endpoints.models.thinking.auto.budgetTokens.description%"
+                                },
+                                "effort": {
+                                  "type": "string",
+                                  "description": "%configuration.endpoints.models.thinking.auto.effort.description%",
+                                  "enum": [
+                                    "none",
+                                    "minimal",
+                                    "low",
+                                    "medium",
+                                    "high",
+                                    "xhigh"
+                                  ],
+                                  "enumDescriptions": [
+                                    "%configuration.endpoints.models.thinking.auto.effort.enumDescriptions.0%",
+                                    "%configuration.endpoints.models.thinking.auto.effort.enumDescriptions.1%",
+                                    "%configuration.endpoints.models.thinking.auto.effort.enumDescriptions.2%",
+                                    "%configuration.endpoints.models.thinking.auto.effort.enumDescriptions.3%",
+                                    "%configuration.endpoints.models.thinking.auto.effort.enumDescriptions.4%",
+                                    "%configuration.endpoints.models.thinking.auto.effort.enumDescriptions.5%"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            },
+                            {
+                              "properties": {
+                                "type": {
+                                  "const": "disabled",
+                                  "description": "%configuration.endpoints.models.thinking.disabled.type.description%"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            }
+                          ]
+                        },
+                        "webSearch": {
+                          "type": "object",
+                          "description": "%configuration.endpoints.models.webSearch.description%",
+                          "properties": {
+                            "enabled": {
+                              "type": "boolean",
+                              "description": "%configuration.endpoints.models.webSearch.enabled.description%"
+                            },
+                            "maxUses": {
+                              "type": "integer",
+                              "description": "%configuration.endpoints.models.webSearch.maxUses.description%"
+                            },
+                            "allowedDomains": {
+                              "type": "array",
+                              "description": "%configuration.endpoints.models.webSearch.allowedDomains.description%",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "blockedDomains": {
+                              "type": "array",
+                              "description": "%configuration.endpoints.models.webSearch.blockedDomains.description%",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "userLocation": {
+                              "type": "object",
+                              "description": "%configuration.endpoints.models.webSearch.userLocation.description%",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "approximate",
+                                  "description": "%configuration.endpoints.models.webSearch.userLocation.type.description%"
+                                },
+                                "city": {
+                                  "type": "string",
+                                  "description": "%configuration.endpoints.models.webSearch.userLocation.city.description%"
+                                },
+                                "region": {
+                                  "type": "string",
+                                  "description": "%configuration.endpoints.models.webSearch.userLocation.region.description%"
+                                },
+                                "country": {
+                                  "type": "string",
+                                  "description": "%configuration.endpoints.models.webSearch.userLocation.country.description%"
+                                },
+                                "timezone": {
+                                  "type": "string",
+                                  "description": "%configuration.endpoints.models.webSearch.userLocation.timezone.description%"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
+                            }
+                          }
+                        },
+                        "memoryTool": {
+                          "type": "boolean",
+                          "description": "%configuration.endpoints.models.memoryTool.description%"
+                        },
+                        "extraHeaders": {
+                          "type": "object",
+                          "description": "%configuration.endpoints.models.extraHeaders.description%",
+                          "additionalProperties": {
+                            "type": "string"
+                          }
+                        },
+                        "extraBody": {
+                          "type": "object",
+                          "description": "%configuration.endpoints.models.extraBody.description%",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  ]
+                },
+                "minItems": 0
+              }
+            }
+          },
+          "default": []
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p .",
+    "watch": "tsc -watch -p .",
+    "l10n:check": "bun run scripts/l10n-audit.ts",
+    "l10n:sync": "bun run scripts/l10n-audit.ts --write --write-locales",
+    "count-loc": "bun run scripts/count-loc.ts",
+    "release": "bun run scripts/release.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/vscode": "^1.104.0",
+    "@vscode/l10n-dev": "^0.0.35",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.73.0",
+    "@google/genai": "^1.40.0",
+    "@iarna/toml": "^2.2.5",
+    "@vscode/l10n": "^0.0.18",
+    "ollama": "^0.6.3",
+    "openai": "^6.18.0"
+  }
+}

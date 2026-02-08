@@ -1,0 +1,15 @@
+.vscode/**
+.claude/**
+src/**
+test/**
+out-tests/**
+.gitignore
+.env*
+*.ts
+!*.d.ts
+*.vsix
+tsconfig*.json
+AGENTS.md
+.git/**
+icon_large.png
+icon_square.png
