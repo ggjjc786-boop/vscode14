@@ -38,8 +38,11 @@ jobs:
       - name: Install vsce
         run: npm install -g @vscode/vsce
 
+      - name: Prepare for packaging
+        run: node -e "const p=require('./package.json');delete p.enabledApiProposals;require('fs').writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
+
       - name: Package VSIX
-        run: vsce package --out vscode-unify-chat-provider.vsix --no-dependencies --allow-proposed-api --skip-license
+        run: vsce package --out vscode-unify-chat-provider.vsix --no-dependencies --allow-star-activation
 
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v4
